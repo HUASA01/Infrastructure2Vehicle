@@ -59,7 +59,6 @@ th { background: var(--surface); font-weight: 650; }
 tr:last-child td { border-bottom: 0; }
 tbody tr:hover { background: #f8fbfc; }
 td[style*="right"], th[style*="right"] { white-space: nowrap; font-variant-numeric: tabular-nums; }
-#reported-results .table-scroll { margin-bottom: 1.5rem; }
 #release-plan { padding: 2rem; background: var(--surface); border: 1px solid var(--line); border-radius: 10px; }
 #release-plan table { background: #fff; }
 footer { padding: 1.7rem 2rem; border-top: 1px solid var(--line); text-align: center; color: var(--muted); font-size: .9rem; }
@@ -75,7 +74,6 @@ footer p { margin: 0; }
   .paper-section { margin-bottom: 2.5rem; padding-top: 2rem; }
   .view-pair { grid-template-columns: 1fr; }
   .table-scroll table { min-width: 560px; }
-  #reported-results .table-scroll table { min-width: 450px; }
   #release-plan { padding: 1.2rem; }
   #release-plan .table-scroll table { min-width: 400px; }
   th, td { padding: .8rem .7rem; }
