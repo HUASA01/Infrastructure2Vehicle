@@ -1,0 +1,209 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light">
+  <meta name="description" content="Offline roadside-to-vehicle data generation with metric depth, 3D Gaussian Splatting, and task-conditioned feature adaptation. CARLA evaluation and staged release plan.">
+  <title>From Infrastructure to Vehicle | Cooperative Data Generation</title>
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%2315293e'/%3E%3Cpath d='M0 16h32M16 0v32' stroke='%2300c2cc' stroke-width='6'/%3E%3Cpath d='M0 16h32M16 0v32' stroke='white' stroke-dasharray='3 3' stroke-width='1'/%3E%3C/svg%3E">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <a class="skip-link" href="#content">Skip to content</a>
+  <nav class="topbar" aria-label="Project navigation">
+    <div class="nav-inner">
+      <a class="wordmark" href="#top">Infrastructure to Vehicle</a>
+      <div class="nav-links">
+        <a href="#method">Method</a>
+        <a href="#reported-results">Results</a>
+        <a href="#release-plan">Release plan</a>
+        <a href="https://github.com/HUASA01/Infrastructure2Vehicle">Repository</a>
+      </div>
+    </div>
+  </nav>
+  <header class="hero" id="top">
+    <p class="eyebrow">Roadside-to-vehicle data generation</p>
+    <h1>From Infrastructure to Vehicle</h1>
+    <p class="subtitle">Cooperative Data Generation Based on Roadside Sensors for Intersection Safety Enhancement</p>
+    <p class="authors">Lingfeng Qi · Guofa Li · Wenbo Chu · Qihong Xue · Jie Li · Keqiang Li</p>
+    <blockquote class="release-status">
+<p><strong>Release status:</strong> The manuscript is under review. This repository currently contains the project overview and representative figures. The implementation is not yet released; the full release is planned upon formal acceptance.</p>
+</blockquote>
+  </header>
+  <main id="content"><section class="paper-section" id="overview"><h2>Overview</h2>
+<p>We study <strong>offline roadside-to-vehicle data generation</strong> for intersection perception. Given synchronized images from calibrated roadside cameras, the pipeline estimates metric depth, initializes and optimizes an instantaneous 3D Gaussian Splatting (3DGS) scene, and renders images at specified vehicle poses. A task-conditioned <strong>Syn2Real Alignment (SRA) Backbone</strong> helps GS-rendered and reference sensor-domain images share the same downstream vehicle-detection head.</p>
+<p>The experiments use <strong>CARLA simulation</strong>. Both the reference sensor-domain observations and the scenes used for GS rendering originate from CARLA. The reported evidence concerns reconstruction and vehicle detection; real-world deployment and direct safety-risk validation remain future work.</p>
+<p class="figure-media"><img alt="Overview of the offline roadside-to-vehicle data-generation pipeline" decoding="async" height="1331" loading="lazy" src="assets/framework.png" width="2014"/></p>
+<p class="figure-caption"><em>Method overview from the manuscript. Metric-depth estimation and 3DGS produce target vehicle views; the SRA path adapts their task-relevant features for downstream perception.</em></p>
+</section><section class="paper-section" id="method"><h2>Method</h2>
+<ol>
+<li><strong>Metric-depth estimation:</strong> Predict geometrically scaled depth from synchronized, calibrated roadside images.</li>
+<li><strong>Instantaneous scene reconstruction:</strong> Back-project the depth estimates to initialize a 3DGS scene, then optimize it against the roadside images for each timestamp independently.</li>
+<li><strong>Vehicle-view rendering:</strong> Render the reconstructed scene at a specified target vehicle pose.</li>
+<li><strong>Task-conditioned feature adaptation:</strong> Use the SRA Backbone to make rendered samples compatible with the downstream detection task.</li>
+</ol>
+<p>The SRA training protocol has three phases:</p>
+<div aria-label="Method table" class="table-scroll" role="region" tabindex="0"><table>
+<thead>
+<tr>
+<th scope="col">Phase</th>
+<th scope="col">Trainable modules</th>
+<th scope="col">Frozen modules</th>
+<th scope="col">Data</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1: Reference-domain pre-training</td>
+<td>Base backbone and detection head</td>
+<td>—</td>
+<td>Reference sensor-domain CARLA images</td>
+</tr>
+<tr>
+<td>2: GS-adaptor training</td>
+<td>GS adaptor</td>
+<td>Base backbone and detection head</td>
+<td>GS-rendered CARLA images</td>
+</tr>
+<tr>
+<td>3: Downstream-head training</td>
+<td>Detection head</td>
+<td>Base backbone and GS adaptor</td>
+<td>Hybrid reference and GS-rendered CARLA images</td>
+</tr>
+</tbody>
+</table></div>
+<p class="figure-media"><img alt="Three-phase SRA training protocol" decoding="async" height="1610" loading="lazy" src="assets/sra.png" width="3126"/></p>
+<p class="figure-caption"><em>The experiments evaluate vehicle detection. Semantic and tracking heads in the schematic indicate possible uses, rather than additional evaluated tasks.</em></p>
+</section><section class="paper-section" id="representative-vehicle-view"><h2>Representative vehicle view</h2>
+<div class="view-pair"><figure><img alt="Reference vehicle view from CARLA" decoding="async" height="299" loading="lazy" src="assets/reference.png" width="530"/><figcaption>Reference sensor-domain image (CARLA)</figcaption></figure><figure><img alt="GS-rendered vehicle view" decoding="async" height="303" loading="lazy" src="assets/rendered.png" width="535"/><figcaption>GS-rendered image</figcaption></figure></div>
+<p class="figure-caption"><em>The example is taken from the manuscript. Content outside roadside-camera coverage can be missing, and objects near occlusion boundaries can be distorted.</em></p>
+</section><section class="paper-section" id="reported-results"><h2>Reported results</h2>
+<p>The following values are reported in the current revised manuscript. They are presented as research results; this page does not yet provide executable reproduction materials.</p>
+<h3>Reconstruction</h3>
+<p>The fixed benchmark contains 200 reconstructed CARLA timestamps. PSNR is in dB; higher PSNR and SSIM are better, and lower LPIPS is better.</p>
+<div aria-label="Reconstruction table" class="table-scroll" role="region" tabindex="0"><table>
+<thead>
+<tr>
+<th scope="col">Evaluation views</th>
+<th scope="col" style="text-align:right">PSNR ↑</th>
+<th scope="col" style="text-align:right">SSIM ↑</th>
+<th scope="col" style="text-align:right">LPIPS ↓</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Original roadside views</td>
+<td style="text-align:right">24.48</td>
+<td style="text-align:right">0.92</td>
+<td style="text-align:right">0.10</td>
+</tr>
+<tr>
+<td>Target vehicle views</td>
+<td style="text-align:right">10.03</td>
+<td style="text-align:right">0.42</td>
+<td style="text-align:right">0.66</td>
+</tr>
+</tbody>
+</table></div>
+<p>The reported complete reconstruction time is <strong>91.48 seconds per timestamp</strong> on a single NVIDIA GeForce RTX 4090D. This includes metric-depth inference, Gaussian initialization, and 512 optimization steps. The pipeline is intended for offline dataset generation.</p>
+<h3>Hybrid-data training</h3>
+<p>In the non-cooperative vehicle-detection setting, Phase 3 freezes the SRA Backbone and trains the detection head. Both conditions below are validated on the same reference sensor-domain CARLA dataset.</p>
+<div aria-label="Hybrid-data training table" class="table-scroll" role="region" tabindex="0"><table>
+<thead>
+<tr>
+<th scope="col">Training condition</th>
+<th scope="col" style="text-align:right">Training samples</th>
+<th scope="col" style="text-align:right">Synthetic ratio</th>
+<th scope="col" style="text-align:right">BEV mAP@0.5 (%) ↑</th>
+<th scope="col" style="text-align:right">BEV mAP@0.7 (%) ↑</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Small reference-only dataset</td>
+<td style="text-align:right">2,019</td>
+<td style="text-align:right">0</td>
+<td style="text-align:right">44.58 ± 0.76</td>
+<td style="text-align:right">25.14 ± 0.89</td>
+</tr>
+<tr>
+<td>Larger hybrid dataset</td>
+<td style="text-align:right">4,128</td>
+<td style="text-align:right">0.4</td>
+<td style="text-align:right">65.54 ± 0.67</td>
+<td style="text-align:right">50.76 ± 0.81</td>
+</tr>
+</tbody>
+</table></div>
+<p>Values are mean ± sample standard deviation over three runs with seeds 0, 1, and 2. The synthetic ratio is the number of synthetic samples divided by the total number of reference and synthetic samples. Because dataset size also changes, this comparison evaluates dataset expansion rather than a strict single-variable ablation of the synthetic ratio.</p>
+<h3>Unseen-intersection reconstruction</h3>
+<p>These evaluations exclude target-intersection images from depth-network training. PSNR is in dB.</p>
+<div aria-label="Unseen-intersection reconstruction table" class="table-scroll" role="region" tabindex="0"><table>
+<thead>
+<tr>
+<th scope="col">Unseen intersection</th>
+<th scope="col" style="text-align:right">Original-view PSNR / SSIM</th>
+<th scope="col" style="text-align:right">Vehicle-view PSNR / SSIM</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>B</td>
+<td style="text-align:right">21.66 / 0.89</td>
+<td style="text-align:right">7.79 / 0.23</td>
+</tr>
+<tr>
+<td>C</td>
+<td style="text-align:right">24.37 / 0.92</td>
+<td style="text-align:right">8.60 / 0.36</td>
+</tr>
+</tbody>
+</table></div>
+<p>These are the reported evaluation values; no repeated-run uncertainty estimate is provided for these rows. They are distinct from the manuscript's original B/C evaluations using retrained depth models.</p>
+</section><section class="paper-section" id="scope-and-limitations"><h2>Scope and limitations</h2>
+<ul>
+<li>Evaluation is limited to CARLA intersections and the stated reconstruction and detection protocols.</li>
+<li>Large viewpoint changes can expose unobserved regions and produce holes or object distortions.</li>
+<li>Reconstruction is performed independently at each timestamp; the reported implementation is an offline data-generation pipeline.</li>
+<li>Task-conditioned feature adaptation provides empirical detection compatibility rather than a guarantee that feature distributions are identical.</li>
+<li>Real-world deployment, direct safety outcomes, and probabilistic uncertainty calibration have not been established by these experiments.</li>
+</ul>
+</section><section class="paper-section" id="release-plan"><h2>Release plan</h2>
+<p>The source code, experiment configurations, figure-generation and analysis scripts, and reproduction guidance will be released through the public GitHub repository upon acceptance. The release will include the CARLA synthetic data and/or the corresponding data-generation scripts.</p>
+<div aria-label="Release plan table" class="table-scroll" role="region" tabindex="0"><table>
+<thead>
+<tr>
+<th scope="col">Material</th>
+<th scope="col">Current status</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Method overview, representative figures, and selected reported results</td>
+<td>Included in this project page</td>
+</tr>
+<tr>
+<td>Method implementation and experiment configurations</td>
+<td>Planned for release upon acceptance</td>
+</tr>
+<tr>
+<td>Figure-generation and analysis scripts</td>
+<td>Planned for release upon acceptance</td>
+</tr>
+<tr>
+<td>Reproduction guidance</td>
+<td>Planned for release upon acceptance</td>
+</tr>
+<tr>
+<td>CARLA synthetic data and/or data-generation scripts</td>
+<td>Planned for release upon acceptance</td>
+</tr>
+</tbody>
+</table></div>
+<p>The current project page does not provide an executable implementation or a complete reproducibility package.</p>
+</section></main>
+  <footer><p>From Infrastructure to Vehicle · CARLA evaluation · Code release planned upon acceptance</p></footer>
+</body>
+</html>
